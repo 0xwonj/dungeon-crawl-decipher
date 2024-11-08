@@ -1,95 +1,85 @@
 use crate::components::*;
-use crate::resources::GameAssets;
+use crate::resources::{GameAssets, Map};
 use bevy::prelude::*;
 
-/// Base movement speed in units per second
-const PLAYER_SPEED: f32 = 300.0;
+pub fn spawn_player(mut commands: Commands, game_assets: Res<GameAssets>, mut map: ResMut<Map>) {
+    let player_position = Position::new(0, 0);
 
-/// Component to store the player's movement velocity
-#[derive(Component, Default)]
-struct Velocity(Vec3);
-
-/// Component to store the player's input state
-#[derive(Component, Default)]
-pub struct MovementInput {
-    direction: Vec2,
-}
-
-/// Spawns the player entity with necessary components
-pub fn spawn_player(mut commands: Commands, game_assets: Res<GameAssets>) {
-    commands.spawn((
-        PlayerBundle {
+    let player = commands
+        .spawn(PlayerBundle {
             marker: Player,
-            health: Health {
-                current: 100,
-                max: 125,
-            },
-            xp: Xp(0),
-            sprite: SpriteBundle {
-                texture: game_assets.player_sprite.clone(),
-                transform: Transform {
-                    translation: Vec3::ZERO,
-                    scale: Vec3::new(0.1, 0.1, 1.0),
-                    ..Default::default()
+            character_bundle: CharacterBundle {
+                position: player_position,
+                health: Health {
+                    current: 100,
+                    max: 100,
                 },
+                xp: Xp(0),
+            },
+            movement_input: MovementInput { direction: None },
+            sprite_bundle: SpriteBundle {
+                texture: game_assets.player_sprite.clone(),
+                transform: Transform::from_translation(player_position.to_translation(map.size)),
                 ..Default::default()
             },
-        },
-        MovementInput::default(),
-        Velocity::default(),
-    ));
+        })
+        .id();
+
+    map.insert_entity(player_position, player, TileSlotType::Character);
 }
 
-/// System that handles keyboard input and updates movement input component
-/// Runs in the Update schedule as input handling should be as responsive as possible
-#[allow(clippy::type_complexity)]
 pub fn handle_input(
-    keyboard: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut MovementInput, With<Player>>,
+    mut keyboard_input: ResMut<ButtonInput<KeyCode>>,
+    mut query: Query<&mut MovementInput>,
 ) {
-    let Ok(mut movement) = query.get_single_mut() else {
-        return;
-    };
+    let mut player_input = query.single_mut();
 
-    let direction = Vec2::new(
-        get_axis_input(&keyboard, KeyCode::ArrowLeft, KeyCode::ArrowRight),
-        get_axis_input(&keyboard, KeyCode::ArrowDown, KeyCode::ArrowUp),
-    );
+    let key = keyboard_input.get_pressed().next();
 
-    movement.direction = direction.normalize_or_zero();
+    if let Some(key) = key {
+        match key {
+            KeyCode::ArrowUp => {
+                player_input.direction = Some((0, 1));
+            }
+            KeyCode::ArrowDown => {
+                player_input.direction = Some((0, -1));
+            }
+            KeyCode::ArrowLeft => {
+                player_input.direction = Some((-1, 0));
+            }
+            KeyCode::ArrowRight => {
+                player_input.direction = Some((1, 0));
+            }
+            _ => {}
+        }
+    } else {
+        player_input.direction = None;
+    }
+
+    keyboard_input.reset_all();
 }
 
-/// System that applies movement based on input
-/// Runs in the FixedUpdate schedule for consistent physics
-#[allow(clippy::type_complexity)]
 pub fn apply_movement(
-    mut query: Query<(&MovementInput, &mut Transform), With<Player>>,
-    time: Res<Time>,
+    mut query: Query<(&mut Position, &mut Transform, &MovementInput), With<Player>>,
+    map: Res<Map>,
 ) {
-    let Ok((movement, mut transform)) = query.get_single_mut() else {
-        return;
-    };
+    let (mut position, mut transform, player_input) = query.single_mut();
 
-    if movement.direction == Vec2::ZERO {
-        return;
-    }
+    if let Some((dx, dy)) = player_input.direction {
+        let target_x = position.x as i32 + dx;
+        let target_y = position.y as i32 + dy;
 
-    let movement_delta = movement.direction.extend(0.0) * PLAYER_SPEED * time.delta_seconds();
-    transform.translation += movement_delta;
-}
+        // TODO: Check if target position is within the map bounds
 
-/// Helper function to get input axis value from keyboard
-fn get_axis_input(
-    keyboard: &Res<ButtonInput<KeyCode>>,
-    negative: KeyCode,
-    positive: KeyCode,
-) -> f32 {
-    let mut axis = 0.0;
-    if keyboard.pressed(negative) {
-        axis -= 1.0;
+        if let Some(tile) = map.get_tile(target_x as usize, target_y as usize) {
+            if tile.tile_type == TileType::Floor {
+                position.x = target_x as u32;
+                position.y = target_y as u32;
+
+                transform.translation = position.to_translation(map.size);
+            }
+        }
     }
-    if keyboard.pressed(positive) {
-        axis += 1.0;
-    }
-    axis
+    println!("Player position: {:?}", position);
+    println!("Player transform: {:?}", transform);
 }

@@ -1,14 +1,7 @@
-// src/systems/setup.rs
+use crate::components::tile::*;
 use crate::resources::*;
+use crate::utils::constants::MAP_SIZE;
 use bevy::prelude::*;
-
-/// Setup system set for organizing initialization systems
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum SetupSystem {
-    LoadAssets,
-    SpawnCamera,
-    SpawnWorld,
-}
 
 /// Loads and initializes game assets
 pub fn setup_assets(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -27,6 +20,16 @@ pub fn setup_camera(mut commands: Commands) {
 
 /// Sets up the game world
 pub fn setup_world(mut commands: Commands) {
-    // Spawn initial world entities
-    // Set up any world-specific resources
+    // Define the map size
+    let mut map = Map::new(MAP_SIZE);
+
+    // Initialize the map tiles
+    for y in 0..map.size.height {
+        for x in 0..map.size.width {
+            map.set_tile(x, y, Tile::new(TileType::Floor));
+        }
+    }
+
+    // Insert the map as a resource in Bevy's ECS
+    commands.insert_resource(map);
 }

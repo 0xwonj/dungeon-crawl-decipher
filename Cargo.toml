@@ -1,10 +1,12 @@
 [package]
-name = "Dungeon Crawl Decipher"
+name = "dungeon-crawl-decipher"
 version = "0.0.1"
-edition = "2024"
+authors = ["Wonjae Choi <wonjae@snu.ac.kr>"]
+edition = "2021"
+repository = "https://github.com/0xwonj/dungeon-crawl-decipher"
 
 [dependencies]
-bevy = "0.14"
+bevy = { version = "0.14", features = ["dynamic_linking"] }
 
 [profile.dev]
 opt-level = 1
