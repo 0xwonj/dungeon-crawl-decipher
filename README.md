@@ -6,7 +6,7 @@
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/dungeon-crawl-decipher.git
+   git clone https://github.com/0xwonj/dungeon-crawl-decipher.git
    ```
 2. Navigate to the project directory:
    ```bash

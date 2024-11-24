@@ -32,6 +32,21 @@ impl Tile {
             TileSlotType::Aboveground => slots.aboveground.add_entity(entity),
         }
     }
+
+    pub fn is_opaque(&self) -> bool {
+        match self.tile_type {
+            TileType::Wall => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_walkable(&self) -> bool {
+        match self.tile_type {
+            TileType::Floor => true,
+            TileType::Door { open } => open,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Component, Clone)]
@@ -129,4 +144,7 @@ pub enum TileSlotType {
 pub enum TileType {
     Floor,
     Wall,
+    Door { open: bool },
+    WetFloor,
+    DeepWater,
 }

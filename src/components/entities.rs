@@ -1,6 +1,7 @@
 use crate::resources::MapSize;
 use crate::utils::constants::TILE_SIZE;
 use bevy::prelude::*;
+use bracket_lib::prelude::Point;
 
 #[derive(Component, Debug, Clone, Copy, PartialEq)]
 pub struct Position {
@@ -12,13 +13,50 @@ impl Position {
     pub fn new(x: u32, y: u32) -> Self {
         Self { x, y }
     }
+}
 
-    pub fn to_translation(&self, map_size: MapSize) -> Vec3 {
-        Vec3::new(
-            (self.x as f32 - (map_size.width as f32 / 2.0)) * TILE_SIZE,
-            (self.y as f32 - (map_size.height as f32 / 2.0)) * TILE_SIZE,
-            0.0,
-        )
+impl From<Point> for Position {
+    fn from(point: Point) -> Self {
+        Self {
+            x: point.x as u32,
+            y: point.y as u32,
+        }
+    }
+}
+
+impl From<Position> for Point {
+    fn from(pos: Position) -> Self {
+        Self::new(pos.x as i32, pos.y as i32)
+    }
+}
+
+impl From<Vec2> for Position {
+    fn from(vec: Vec2) -> Self {
+        Self {
+            x: (vec.x / TILE_SIZE) as u32,
+            y: (vec.y / TILE_SIZE) as u32,
+        }
+    }
+}
+
+impl From<Position> for Vec2 {
+    fn from(pos: Position) -> Self {
+        Self::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE)
+    }
+}
+
+impl From<Vec3> for Position {
+    fn from(vec: Vec3) -> Self {
+        Self {
+            x: (vec.x / TILE_SIZE) as u32,
+            y: (vec.y / TILE_SIZE) as u32,
+        }
+    }
+}
+
+impl From<Position> for Vec3 {
+    fn from(pos: Position) -> Self {
+        Self::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, 0.0)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::components::entities::*;
+use crate::components::{entities::*, fov::FieldOfView};
 use bevy::prelude::*;
 
 #[derive(Bundle)]
@@ -12,6 +12,7 @@ pub struct CharacterBundle {
 pub struct PlayerBundle {
     pub marker: Player,
     pub character_bundle: CharacterBundle,
+    pub field_of_view: FieldOfView,
     pub movement_input: MovementInput,
     pub sprite_bundle: SpriteBundle,
 }
