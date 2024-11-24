@@ -7,6 +7,8 @@ repository = "https://github.com/0xwonj/dungeon-crawl-decipher"
 
 [dependencies]
 bevy = { version = "0.14", features = ["dynamic_linking"] }
+bracket-lib = "0.8.7"
+smallvec = "1.13.2"
 
 [profile.dev]
 opt-level = 1

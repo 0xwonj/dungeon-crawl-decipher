@@ -1,5 +1,7 @@
 use crate::components::{Position, Tile, TileSlotType};
 use bevy::prelude::*;
+use bracket_lib::prelude::{Algorithm2D, BaseMap, Point};
+use smallvec::SmallVec;
 
 #[derive(Resource)]
 pub struct GameAssets {
@@ -75,5 +77,50 @@ impl Map {
 
     pub fn iter_tiles_mut(&mut self) -> impl Iterator<Item = &mut Option<Tile>> {
         self.tiles.iter_mut()
+    }
+}
+
+impl BaseMap for Map {
+    fn is_opaque(&self, idx: usize) -> bool {
+        self.tiles[idx]
+            .as_ref()
+            .map_or(true, |tile| tile.is_opaque())
+    }
+
+    fn get_available_exits(&self, idx: usize) -> SmallVec<[(usize, f32); 10]> {
+        let mut exits = SmallVec::new();
+
+        let x = idx % self.size.width;
+        let y = idx / self.size.width;
+
+        let directions = [(0, -1), (0, 1), (-1, 0), (1, 0)];
+
+        for (dx, dy) in directions.iter() {
+            let new_x = x as i32 + dx;
+            let new_y = y as i32 + dy;
+
+            if let Some(new_idx) = self.index(new_x as usize, new_y as usize) {
+                if self.get_tile(x, y).unwrap().is_walkable() {
+                    exits.push((new_idx, 1.0));
+                }
+            }
+        }
+
+        exits
+    }
+
+    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
+        let x1 = idx1 % self.size.width;
+        let y1 = idx1 / self.size.width;
+        let x2 = idx2 % self.size.width;
+        let y2 = idx2 / self.size.width;
+
+        ((x2 as i32 - x1 as i32).abs() + (y2 as i32 - y1 as i32).abs()) as f32
+    }
+}
+
+impl Algorithm2D for Map {
+    fn dimensions(&self) -> Point {
+        Point::new(self.size.width as i32, self.size.height as i32)
     }
 }
